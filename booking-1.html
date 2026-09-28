@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking & Payment - ElectroRent</title>
+<style>
+body{font-family:Arial;background:#f4f6fb;padding:25px;color:#182033}.box{background:white;padding:28px;max-width:620px;margin:20px auto;border-radius:16px;box-shadow:0 8px 30px #17203315}
+h1{color:#6c3cff}input,select{width:100%;padding:12px;margin:7px 0 14px;border:1px solid #d7dce6;border-radius:8px;box-sizing:border-box}
+button{width:100%;padding:13px;margin-top:8px;background:#6c3cff;color:white;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+.result,.payment{padding:15px;border-radius:10px;margin:10px 0}.result{background:#eee9ff}.payment{border:1px solid #ddd}
+.success{background:#eafff4;color:#14734e;padding:16px;border-radius:10px;margin-top:15px}a{display:block;margin-top:18px;color:#6c3cff}
+</style></head>
+<body><div class="box">
+<h1>💳 Booking & Payment</h1><h3 id="product"></h3>
+<label>Start Date</label><input id="start" type="date">
+<label>Return Date</label><input id="end" type="date">
+<button onclick="calculate()">Calculate Rental</button>
+<div id="result" class="result">Select dates and calculate the rental amount.</div>
+<h3>Choose Payment Method</h3>
+<div class="payment"><label><input type="radio" name="method" value="UPI" onchange="fields()"> 📱 UPI</label></div>
+<div class="payment"><label><input type="radio" name="method" value="Card" onchange="fields()"> 💳 Debit / Credit Card</label></div>
+<div class="payment"><label><input type="radio" name="method" value="Net Banking" onchange="fields()"> 🏦 Net Banking</label></div>
+<div class="payment"><label><input type="radio" name="method" value="Cash on Delivery" onchange="fields()"> 💵 Cash on Delivery</label></div>
+<div id="paymentFields"></div>
+<button onclick="book()">Pay & Confirm Booking</button><div id="message"></div>
+<a href="rental.html">← Back to Electronics</a><a href="index.html">← Home</a>
+</div>
+<script>
+const product=localStorage.getItem('selectedProduct')||'No product selected';
+document.getElementById('product').textContent='Selected Product: '+product;
+const prices={Laptop:499,Camera:799,Projector:599,'Gaming Console':699,Speaker:299,Tablet:399};
+let total=0,days=0;
+function calculate(){
+ const a=new Date(document.getElementById('start').value),b=new Date(document.getElementById('end').value);
+ if(!start.value||!end.value)return alert('Please select both dates.');
+ days=Math.ceil((b-a)/86400000);if(days<1)return alert('Return date must be after start date.');
+ const daily=prices[product]||499;total=days*daily;
+ result.innerHTML=`Rental duration: <b>${days} day(s)</b><br>Daily rental: <b>₹${daily}</b><br>Rental amount: <b>₹${total}</b><br>Security deposit: <b>₹2,000</b><br><strong>Total payable: ₹${total+2000}</strong>`;
+}
+function fields(){
+ const m=document.querySelector('input[name=method]:checked').value,b=document.getElementById('paymentFields');
+ if(m==='UPI')b.innerHTML='<label>UPI ID</label><input id="paymentInput" placeholder="example@upi">';
+ else if(m==='Card')b.innerHTML='<label>Card Number</label><input id="paymentInput" maxlength="19" placeholder="1234 5678 9012 3456"><label>Expiry</label><input placeholder="MM/YY"><label>CVV</label><input type="password" maxlength="3" placeholder="123">';
+ else if(m==='Net Banking')b.innerHTML='<label>Select Bank</label><select id="paymentInput"><option>State Bank of India</option><option>HDFC Bank</option><option>ICICI Bank</option><option>Axis Bank</option></select>';
+ else b.innerHTML='<div class="result">Pay when the equipment is delivered.</div>';
+}
+function book(){
+ const selected=document.querySelector('input[name=method]:checked');
+ if(!total)return alert('Please calculate the rental first.');
+ if(!selected)return alert('Please select a payment method.');
+ const m=selected.value,field=document.getElementById('paymentInput');
+ if(m!=='Cash on Delivery'&&field&&!field.value)return alert('Please enter payment details.');
+ const bookings=JSON.parse(localStorage.getItem('bookings')||'[]');
+ bookings.push({product,start:start.value,end:end.value,days,amount:total,deposit:2000,paymentMethod:m,paymentStatus:m==='Cash on Delivery'?'Pending':'Demo Payment Successful',status:'Booked'});
+ localStorage.setItem('bookings',JSON.stringify(bookings));
+ message.innerHTML=`<div class="success"><b>✅ Booking Confirmed!</b><br>Product: ${product}<br>Payment Method: ${m}<br>Rental Amount: ₹${total}<br>Security Deposit: ₹2,000<br>Payment Status: ${m==='Cash on Delivery'?'Pending':'Demo Payment Successful'}</div>`;
+}
+</script></body></html>
